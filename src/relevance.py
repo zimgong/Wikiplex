@@ -124,7 +124,9 @@ def ndcg_score(search_result_relevances: list[float],
 def run_relevance_tests(relevance_data_filename: str, ranker,
                         pseudofeedback_num_docs: int = 0,
                         pseudofeedback_alpha: float = 0.8,
-                        pseudofeedback_beta: float = 0.2
+                        pseudofeedback_beta: float = 0.2,
+                        mmr_lambda: int = 1,
+                        mmr_threshold: int = 100
                         ) -> dict[str, float]:
     # TODO: Implement running relevance test for the search system for multiple queries.
     """
@@ -149,8 +151,17 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
         query = queries[i]
         ideal = relevance_df[relevance_df['query'] == query]
         ideal = ideal.sort_values(by=['rel'], ascending=False)
-        response = ranker.query(
-            query, pseudofeedback_num_docs, pseudofeedback_alpha, pseudofeedback_beta)
+        if ranker.__class__.__name__ == 'L2RRanker':
+            response = ranker.query(
+                query,
+                pseudofeedback_num_docs,
+                pseudofeedback_alpha,
+                pseudofeedback_beta,
+                mmr_lambda=mmr_lambda,
+                mmr_threshold=mmr_threshold
+            )
+        else:
+            response = ranker.query(query)
 
     # TODO: For each query's result, calculate the MAP and NDCG for every single query and average them out
 
@@ -204,7 +215,8 @@ def run_fairness_test(attributes_file_path: str, protected_class: str, queries: 
     attributes_df = pd.read_csv(attributes_file_path)
 
     # TODO (HW5): Find the documents associated with the protected class
-    rel_docs = attributes_df[attributes_df[protected_class].isnull() == False]['docid'].values
+    rel_docs = attributes_df[attributes_df[protected_class].isnull(
+    ) == False]['docid'].values
 
     score = []
 
@@ -223,7 +235,7 @@ def run_fairness_test(attributes_file_path: str, protected_class: str, queries: 
                 actual_omega_values.append(1)
         score.append(nfairr_score(actual_omega_values, cut_off))
 
-    return sum(score) 
+    return sum(score)
 
 
 if __name__ == '__main__':

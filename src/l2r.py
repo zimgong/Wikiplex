@@ -168,7 +168,7 @@ class L2RRanker:
 
         # TODO: Prepare the training data by featurizing the query-doc pairs and
         #       getting the necessary datastructures
-        X, y, qgroups = self.prepare_training_data(query_to_doc_rel_scores)
+            X, y, qgroups = self.prepare_training_data(query_to_doc_rel_scores)
         pickle.dump(X, open('../cache/' + model_name + 'X.pkl', 'wb'))
         pickle.dump(y, open('../cache/' + model_name + 'y.pkl', 'wb'))
         pickle.dump(qgroups, open('../cache/' + model_name + 'qgroups.pkl', 'wb'))
@@ -323,8 +323,7 @@ class L2RRanker:
         # TODO (HW5): Get the document similarity matrix for the thresholded documents using vector_ranker
         #      Preserve the input list of documents to be used in the MMR function
         if self.ranker.__class__.__name__ == 'VectorRanker':
-            list_docs = [self.ranker.row_to_docid.index(
-                item[0]) + 1 for item in results[:mmr_threshold]]
+            list_docs = [item[0] for item in results[:mmr_threshold]]
             document_similarity = self.ranker.document_similarity(list_docs)
 
         # TODO (HW5): Run the maximize_mmr function with appropriate arguments
