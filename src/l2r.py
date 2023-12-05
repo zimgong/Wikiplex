@@ -119,7 +119,7 @@ class L2RRanker:
 
         return doc_term_count
 
-    def train(self, training_data_filename: str) -> None:
+    def train(self, training_data_filename: str, model_name: str='') -> None:
         """
         Trains a LambdaMART pair-wise learning to rank model using the documents and relevance scores provided 
         in the training data file.
@@ -128,50 +128,50 @@ class L2RRanker:
             training_data_filename (str): a filename for a file containing documents and relevance scores
         """
         # TODO: Convert the relevance data into the right format for training data preparation
-        # if os.path.exists('../cache/' + model_name + 'X.pkl'):
-        #     X = pickle.load(open('../cache/' + model_name + 'X.pkl', 'rb'))
-        #     y = pickle.load(open('../cache/' + model_name + 'y.pkl', 'rb'))
-        #     qgroups = pickle.load(open('../cache/' + model_name + 'qgroups.pkl', 'rb'))
-        # else:
-        query_to_doc_rel_scores = {}
-        if training_data_filename.endswith('.csv'):
-            with open(training_data_filename, 'r') as f:
-                reader = csv.reader(f)
-                reader.__next__()
-                if training_data_filename.endswith('data-relevance.csv'):
-                    for row in tqdm(reader):
-                        query = row[0]
-                        docid = int(row[1])
-                        rel_score = row[2]
-                        if query not in query_to_doc_rel_scores:
-                            query_to_doc_rel_scores[query] = [
-                                (docid, rel_score)]
-                        else:
-                            query_to_doc_rel_scores[query].append(
-                                (docid, rel_score))
-                elif training_data_filename.endswith('.train.csv'):
-                    for row in tqdm(reader):
-                        query = row[0]
-                        docid = int(row[2])
-                        rel_score = row[4]
-                        if query not in query_to_doc_rel_scores:
-                            query_to_doc_rel_scores[query] = [
-                                (docid, rel_score)]
-                        else:
-                            query_to_doc_rel_scores[query].append(
-                                (docid, rel_score))
-        elif training_data_filename.endswith('.jsonl'):
-            query_to_doc_rel_scores = pd.read_json(
-                training_data_filename, lines=True)
+        if os.path.exists('../cache/' + model_name + 'X.pkl'):
+            X = pickle.load(open('../cache/' + model_name + 'X.pkl', 'rb'))
+            y = pickle.load(open('../cache/' + model_name + 'y.pkl', 'rb'))
+            qgroups = pickle.load(open('../cache/' + model_name + 'qgroups.pkl', 'rb'))
         else:
-            raise ValueError("Unsupported file format.")
+            query_to_doc_rel_scores = {}
+            if training_data_filename.endswith('.csv'):
+                with open(training_data_filename, 'r') as f:
+                    reader = csv.reader(f)
+                    reader.__next__()
+                    if training_data_filename.endswith('data-relevance.csv'):
+                        for row in tqdm(reader):
+                            query = row[0]
+                            docid = int(row[1])
+                            rel_score = row[2]
+                            if query not in query_to_doc_rel_scores:
+                                query_to_doc_rel_scores[query] = [
+                                    (docid, rel_score)]
+                            else:
+                                query_to_doc_rel_scores[query].append(
+                                    (docid, rel_score))
+                    elif training_data_filename.endswith('.train.csv'):
+                        for row in tqdm(reader):
+                            query = row[0]
+                            docid = int(row[2])
+                            rel_score = row[4]
+                            if query not in query_to_doc_rel_scores:
+                                query_to_doc_rel_scores[query] = [
+                                    (docid, rel_score)]
+                            else:
+                                query_to_doc_rel_scores[query].append(
+                                    (docid, rel_score))
+            elif training_data_filename.endswith('.jsonl'):
+                query_to_doc_rel_scores = pd.read_json(
+                    training_data_filename, lines=True)
+            else:
+                raise ValueError("Unsupported file format.")
 
         # TODO: Prepare the training data by featurizing the query-doc pairs and
         #       getting the necessary datastructures
         X, y, qgroups = self.prepare_training_data(query_to_doc_rel_scores)
-        # pickle.dump(X, open('../cache/' + model_name + 'X.pkl', 'wb'))
-        # pickle.dump(y, open('../cache/' + model_name + 'y.pkl', 'wb'))
-        # pickle.dump(qgroups, open('../cache/' + model_name + 'qgroups.pkl', 'wb'))
+        pickle.dump(X, open('../cache/' + model_name + 'X.pkl', 'wb'))
+        pickle.dump(y, open('../cache/' + model_name + 'y.pkl', 'wb'))
+        pickle.dump(qgroups, open('../cache/' + model_name + 'qgroups.pkl', 'wb'))
 
         # TODO: Train the model
         print("Training model...")

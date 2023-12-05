@@ -395,7 +395,7 @@ class Indexer:
 
         # NOTE: Make sure to support both .jsonl.gz and .jsonl as input
         if max_docs == -1:
-            max_docs = 1000000
+            max_docs = 200000
         if dataset_path.endswith('.jsonl.gz'):
             dataset_file = gzip.open(dataset_path, 'rt', encoding='utf8')
         elif dataset_path.endswith('.jsonl'):
