@@ -27,7 +27,7 @@ algorithm = initialize()
 pagination_cache = {}
 timer_mgr = {}
 
-experiment_data = pd.concat([pd.read_csv('./l2r/test.csv'), pd.read_csv('./l2r/train.csv')])
+# experiment_data = pd.concat([pd.read_csv('../data/test.csv'), pd.read_csv('../data/train.csv')])
 
 # TODO move configuration to a config file
 PAGE_SIZE = 10
