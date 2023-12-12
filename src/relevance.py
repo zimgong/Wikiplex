@@ -28,6 +28,8 @@ def nfairr_score(actual_omega_values: list[int], cut_off=200) -> float:
     FaiRR_list = []
     IFaiRR_list = []
     for i in range(cut_off):
+        if i >= len(actual_omega_values):
+            break
         if i == 0:
             FaiRR = actual_omega_values[i]
             IFaiRR = ideal_values[i]
@@ -36,6 +38,8 @@ def nfairr_score(actual_omega_values: list[int], cut_off=200) -> float:
             IFaiRR = ideal_values[i] / (math.log2(i + 1))
         FaiRR_list.append(FaiRR)
         IFaiRR_list.append(IFaiRR)
+    if np.sum(FaiRR_list) == 0:
+        return 0
     return np.sum(FaiRR_list) / np.sum(IFaiRR_list)
 
 
