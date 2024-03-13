@@ -7,27 +7,23 @@ This is the FastAPI start index. Currently it has 4 paths
 2. POST /search -> This is the main search API which is responsible for perform the search across the index
 3. GET /cache/:query/page/:page -> This path is meant to be a cached response for pagination purposes.
 '''
+
 # importing external modules
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from threading import Timer
 import math
-import pandas as pd
-
 
 # importing internal modules
 from models import QueryModel, APIResponse, PaginationModel
 from pipeline import initialize
 
-# Some global variables
-# TODO Remove global variables
+# Global variables (if any)
 
 algorithm = initialize()
 
 pagination_cache = {}
 timer_mgr = {}
-
-# experiment_data = pd.concat([pd.read_csv('../data/test.csv'), pd.read_csv('../data/train.csv')])
 
 # TODO move configuration to a config file
 PAGE_SIZE = 10
@@ -35,18 +31,19 @@ CACHE_TIME = 3600
 
 # this is the FastAPI application
 app = FastAPI()
-# cache deletion function used to delete cache entries after a set timeout.
 
 
 def delete_from_cache(query):
+    # cache deletion function used to delete cache entries after a set timeout.
     global pagination_cache
     if query in pagination_cache:
         del pagination_cache[query]
         del timer_mgr[query]
 
-# API paths begin here
+
 @app.get('/', response_class=HTMLResponse)
 async def home():
+    # API paths begin here
     with open('./web/home.html') as f:
         return f.read()
 
@@ -66,6 +63,7 @@ async def doSearch(body: QueryModel) -> APIResponse:
     return APIResponse(results=response[:PAGE_SIZE],
                        page=PaginationModel(prev=f'/cache/{request_query}/page/0',
                                             next=f'/cache/{request_query}/page/1'))
+
 
 @app.get('/cache/{query}/page/{page}')
 async def getCache(query: str, page: int) -> APIResponse:

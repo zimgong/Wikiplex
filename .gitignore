@@ -163,5 +163,5 @@ edgelist*
 wiki*
 
 .vscode
-cache/
+__cache__/
 data/network_stats.csv

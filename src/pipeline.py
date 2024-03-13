@@ -2,6 +2,7 @@
 Author: Zim Gong
 This file is a template code file for the Search Engine. 
 '''
+
 import csv
 import gzip
 import json
@@ -14,7 +15,7 @@ from tqdm import tqdm
 
 from models import BaseSearchEngine, SearchResponse
 
-# your library imports go here
+# project library imports go here
 from document_preprocessor import RegexTokenizer
 from indexing import Indexer, IndexType
 from ranker import *
@@ -23,7 +24,7 @@ from vector_ranker import VectorRanker
 from network_features import NetworkFeatures
 
 DATA_PATH = '../data/'
-CACHE_PATH = '../cache/'
+CACHE_PATH = '../__cache__/'
 STOPWORD_PATH = DATA_PATH + 'stopwords.txt'
 DATASET_PATH = DATA_PATH + 'wikipedia_200k_dataset.jsonl.gz'
 DOC2QUERY_PATH = DATA_PATH + 'doc2query.csv'
@@ -244,3 +245,11 @@ class SearchEngine(BaseSearchEngine):
 def initialize():
     search_obj = SearchEngine()
     return search_obj
+
+
+def main():
+    initialize()
+
+
+if __name__ == '__main__':
+    main()

@@ -16,6 +16,44 @@ to start the server.
 
 ---
 
+## Description
+
+This project is a Wikipedia search engine with a dataset of 200k documents for demo. The demo search engine contains the following components: 
+
+1. **Document Preprocessing**: The documents are preprocessed using a nltk tokenizer with stopwords removed. 
+
+2. **Document Augmentation**: The documents are augmented with queries generated using the `doc2query` model. 
+
+3. **Indexing**: The documents are indexed using an inverted index respectively for the title and the body with minimum word frequency filtering. 
+
+4. **Non-ML Ranking**: The search engine supports the following types of non-machine-learning rankers:
+    - Word Count Cosine Similarity
+    - Dirichlet LM
+    - BM25
+    - Pivoted Normalization
+    - TF-IDF
+
+5. **Learning to Rank (L2R)**: The search engine supports a learning to rank model using LambdaMART with the following features:
+    - Document, title, and query length and TF, TF-IDF scores.
+    - Non-ML ranker scores. 
+    - PageRank, HITS hub and authority scores. 
+    - Cross-encoder scores. 
+    - Document categories. 
+
+6. **Vector Ranking**: The search engine supports a vector-based ranker using pre-trained models of both Bi-Encoder and Cross-Encoder from the HuggingFace Transformers library. 
+
+7. **Pseudo-feedback**: The search engine supports pseudo-feedback for the non-ML rankers and the L2R model by assuming the top `n` documents are relevant and updating the query. 
+
+8. **Personalization**: The search engine supports personalization using the PersonalizedBM25 model. 
+
+9. **Caching**: The essential data structures and ML models are cached to improve the performance of the search engine.  
+
+10. **Relevance Scoring**: MAP and NDCG scores are used to evaluate the relevance of the search results. 
+
+11. **Fairness Scoring**: The search engine supports fairness scoring using the NFAIRR metric. 
+
+12. **Increasing Diversity**: The search engine supports the MMR algorithm to increase the diversity of the search results. 
+
 ## Data
 
 1. The `wikipedia_1M_dataset.jsonl.gz` dataset contains 1 million Wikipedia articles. The `wikipedia_200k_dataset.jsonl.gz` dataset is a reduced version containing 200 thousand Wikipedia articles. Both datasets are in JSONL format where each lines is a separate JSON of the following format. 
@@ -35,7 +73,7 @@ to start the server.
 - `relevance.train.csv`
 - `relevance.test.csv`
 
-3. `doc2query.csv` has the queries generated for all of the 200k documents using `doc2query/msmarco-t5-base-v1`. *This should be used while indexing, not in document preprocessor.*
+3. `doc2query.csv` has the queries generated for all of the 200k documents using `doc2query/msmarco-t5-base-v1`. This is used while indexing. 
 
 4. `wiki-200k-vecs.msmarco-MiniLM-L12-cos-v5.npy` has all the document embeddings meant to be used in the `VectorRanker`. Use `numpy.load` to load the numpy matrix and the embedding insertion order follows the document order in the `wikipedia_200k_dataset.jsonl`.
 
@@ -58,10 +96,10 @@ to start the server.
 - This code will run the search engine locally.
 
 - `__init__` : Standard initialization specification:
-  * Use the `RegexTokenizer`.
+  * Using the `RegexTokenizer` is preferred for best compromise between speed and accuracy. 
   * Load in the stopwords here to pass them to the relevant class's `__init__` functions.
   * Create separate `BasicInvertedIndex` objects for the main body of the argument and the title text.
-  * Use the `L2RRanker` instead of the `Ranker`.
+  * Use the `L2RRanker` instead of the `Ranker` for the L2R system. 
 
 ---
 
@@ -117,7 +155,7 @@ to start the server.
   * `stopwords: set[bool]` 
     - A set of stopwords provided or `None` or an empty `set` to not perform stopwords filtering.
   * `text_key` 
-    - This argument specifies which key to use in the dataset's JSON object for getting text when creating the index. It defaults to "text" but when you create an index for the title, you'll need to change its value.
+    - This argument specifies which key to use in the dataset's JSON object for getting text when creating the index. It defaults to "text" but when creating an index for the title, its value should be "title". 
   * `max_docs`
     - This specifies the maximum number of document to process from the dataset (ignoring the rest). If the argument's value is -1, use all the documents. This argument is helpful for testing settings where an index of real data is acquired without loading in all the data.
   * **Important Note** `minimum_word_frequency` needs to be computed based on frequencies at the collection-level, _not_ at the document level. This means if some minimum is required, the entire collection needs to be read and tokenized first to count word frequencies and _then_ the collection should be re-read to filter based on these counts. With 200K documents, the reference implementation takes around 90 seconds for the first pass (token counting) and 120 seconds to index everything.
