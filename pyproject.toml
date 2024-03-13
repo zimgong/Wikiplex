@@ -1,0 +1,20 @@
+[project]
+name = "wikiplex"
+version = "0.0.1"
+authors = [
+  { name="Zim Gong", email="zimgong@umich.edu" },
+]
+description = "A Wikipedia Search Engine"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/zimgong/Wikiplex"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
