@@ -12,7 +12,7 @@ class Ranker:
     using a particular relevance function (e.g., BM25).
     A Ranker can be configured with any RelevanceScorer.
     """
-    # TODO: Return a list of sorted relevant documents.
+    # Return a list of sorted relevant documents.
 
     def __init__(self, index: InvertedIndex, document_preprocessor, stopwords: set[str],
                  scorer: 'RelevanceScorer', raw_text_dict: dict[int, str]) -> None:
@@ -54,7 +54,7 @@ class Ranker:
         The query function should return a sorted list of tuples where each tuple has the first element as the document ID
         and the second element as the score of the document after the ranking process.
         """
-        # TODO: Tokenize the query and remove stopwords, if needed
+        # Tokenize the query and remove stopwords, if needed
         query_parts = self.tokenize(query)
         if len(query_parts) == 0:
             return []
@@ -62,11 +62,11 @@ class Ranker:
 
         results = self.rank_docs(query_parts, query, query_word_count)
 
-        # TODO: If the user has indicated we should use feedback,
-        #  create the pseudo-document from the specified number of pseudo-relevant results.
-        #  This document is the cumulative count of how many times all non-filtered words show up
-        #  in the pseudo-relevant documents. See the equation in the write-up. Be sure to apply the same
-        #  token filtering and normalization here to the pseudo-relevant documents.
+        # If the user has indicated we should use feedback,
+        # create the pseudo-document from the specified number of pseudo-relevant results.
+        # This document is the cumulative count of how many times all non-filtered words show up
+        # in the pseudo-relevant documents. See the equation in the write-up. Be sure to apply the same
+        # token filtering and normalization here to the pseudo-relevant documents.
         if pseudofeedback_num_docs > 0:
             pseudo_docs_word_count = Counter()
             for docid, score in results[:pseudofeedback_num_docs]:
@@ -75,7 +75,7 @@ class Ranker:
                 pseudo_doc = self.tokenize(self.raw_text_dict[docid])
                 pseudo_docs_word_count.update(pseudo_doc)
 
-        # TODO: Combine the document word count for the pseudo-feedback with the query to create a new query
+        # Combine the document word count for the pseudo-feedback with the query to create a new query
         # NOTE: When using alpha and beta to weight the query and pseudofeedback doc, the counts
         #  will likely be *fractional* counts (not integers).
             new_query_word_count = Counter()
@@ -92,7 +92,7 @@ class Ranker:
 
     def rank_docs(self, query_parts: list[str], query: str,
                   query_word_count: dict[str, int]) -> list[tuple[int, float]]:
-        # TODO: Fetch a list of possible documents from the index and create a mapping from
+        # Fetch a list of possible documents from the index and create a mapping from
         #  a document ID to a dictionary of the counts of the query terms in that document.
         #  You will pass the dictionary to the RelevanceScorer as input.
         relevant_docs = set()
@@ -106,7 +106,7 @@ class Ranker:
             doc_term_counts = self.accumulate_doc_term_counts(
                 self.index, query_parts, relevant_docs)
 
-        # TODO: Rank the documents using a RelevanceScorer
+        # Rank the documents using a RelevanceScorer
         results = []
         if self.scorer.__class__.__name__ == 'CrossEncoderScorer':
             for docid in relevant_docs:
@@ -118,7 +118,7 @@ class Ranker:
                     docid, doc_term_counts[docid], query_word_count)
                 results.append((docid, score))
 
-        # TODO: Return the **sorted** results as format [{docid: 100, score:0.5}, {{docid: 10, score:0.2}}]
+        # Return the **sorted** results as format [{docid: 100, score:0.5}, {{docid: 10, score:0.2}}]
         results.sort(key=lambda x: x[1], reverse=True)
         return results
 
@@ -138,7 +138,7 @@ class Ranker:
             A dictionary mapping each document containing at least one of the query tokens to
             a dictionary with how many times each of the query words appears in that document
         """
-        # TODO: Retrieve the set of documents that have each query word (i.e., the postings) and
+        # Retrieve the set of documents that have each query word (i.e., the postings) and
         # create a dictionary that keeps track of their counts for the query word
         doc_term_count = defaultdict(Counter)
 
@@ -156,8 +156,8 @@ class RelevanceScorer:
     This is the base interface for all the relevance scoring algorithm.
     It will take a document and attempt to assign a score to it.
     """
-    # TODO: Implement the functions in the child classes (WordCountCosineSimilarity, DirichletLM, BM25,
-    #  PivotedNormalization, TF_IDF) and not in this one
+    # Implement the functions in the child classes (WordCountCosineSimilarity, DirichletLM, BM25,
+    # PivotedNormalization, TF_IDF) and not in this one
 
     def __init__(self, index: InvertedIndex, parameters) -> None:
         raise NotImplementedError
@@ -181,7 +181,7 @@ class RelevanceScorer:
         raise NotImplementedError
 
 
-# TODO: Implement unnormalized cosine similarity on word count vectors
+# Implement unnormalized cosine similarity on word count vectors
 class WordCountCosineSimilarity(RelevanceScorer):
     def __init__(self, index: InvertedIndex, parameters={}) -> None:
         self.index = index
@@ -201,7 +201,7 @@ class WordCountCosineSimilarity(RelevanceScorer):
         return score
 
 
-# TODO: Implement DirichletLM
+# Implement DirichletLM
 class DirichletLM(RelevanceScorer):
     def __init__(self, index: InvertedIndex, parameters={'mu': 2000}) -> None:
         self.index = index
@@ -226,7 +226,7 @@ class DirichletLM(RelevanceScorer):
         return score
 
 
-# TODO: Implement BM25
+# Implement BM25
 class BM25(RelevanceScorer):
     def __init__(self, index: InvertedIndex, parameters={'b': 0.75, 'k1': 1.2, 'k3': 8}) -> None:
         self.index = index
@@ -259,7 +259,7 @@ class BM25(RelevanceScorer):
         return score
 
 
-# TODO: Implement Personalized BM25
+# Implement Personalized BM25
 class PersonalizedBM25(RelevanceScorer):
     def __init__(self, index: InvertedIndex, relevant_doc_index: InvertedIndex,
                  parameters={'b': 0.75, 'k1': 1.2, 'k3': 8}) -> None:
@@ -282,7 +282,7 @@ class PersonalizedBM25(RelevanceScorer):
         self.k3 = parameters['k3']
 
     def score(self, docid: int, doc_word_counts: dict[str, int], query_word_counts: dict[str, int]) -> float:
-        # TODO: Implement Personalized BM25
+        # Implement Personalized BM25
         score = 0
         num_docs = self.index.get_statistics()['number_of_documents']
         num_docs_rel = self.relevant_doc_index.get_statistics()[
@@ -305,7 +305,7 @@ class PersonalizedBM25(RelevanceScorer):
         return score
 
 
-# TODO: Implement Pivoted Normalization
+# Implement Pivoted Normalization
 class PivotedNormalization(RelevanceScorer):
     def __init__(self, index: InvertedIndex, parameters={'b': 0.2}) -> None:
         self.index = index
@@ -334,7 +334,7 @@ class PivotedNormalization(RelevanceScorer):
         return score
 
 
-# TODO: Implement TF-IDF
+# Implement TF-IDF
 class TF_IDF(RelevanceScorer):
     def __init__(self, index: InvertedIndex, parameters={}) -> None:
         self.index = index
@@ -371,7 +371,7 @@ class CrossEncoderScorer:
         NOTE 2: This is not a RelevanceScorer object because the method signature for score() does not match,
             but it has the same intent, in practice.
         """
-        # TODO: Save any new arguments that are needed as fields of this class
+        # Save any new arguments that are needed as fields of this class
         self.raw_text_dict = raw_text_dict
         self.model = CrossEncoder(cross_encoder_model_name)
 
@@ -391,12 +391,12 @@ class CrossEncoderScorer:
         if docid not in self.raw_text_dict:
             return 0
 
-        # TODO: Get a score from the cross-encoder model
-        #  Refer to IR_Encoder_Examples.ipynb in Demos folder if needed
+        # Get a score from the cross-encoder model
+        # Refer to IR_Encoder_Examples.ipynb in Demos folder if needed
         return self.model.predict([(query, self.raw_text_dict[docid])])[0]
 
 
-# TODO: Implement your own ranker with proper heuristics
+# Implement your own ranker with proper heuristics
 class YourRanker(RelevanceScorer):
     pass
 
