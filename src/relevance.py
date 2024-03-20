@@ -5,7 +5,6 @@ import pandas as pd
 from tqdm import tqdm
 
 
-# TODO (HW5): Implement NFaiRR
 def nfairr_score(actual_omega_values: list[int], cut_off=200) -> float:
     """
     Computes the normalized fairness-aware rank retrieval (NFaiRR) score for a list of omega values
@@ -21,8 +20,7 @@ def nfairr_score(actual_omega_values: list[int], cut_off=200) -> float:
     Returns:
         The NFaiRR score
     """
-    # TODO (HW5): Compute the FaiRR and IFaiRR scores using the given list of omega values
-    # TODO (HW5): Implement NFaiRR
+    # Compute the FaiRR and IFaiRR scores using the given list of omega values
     actual_omega_values = actual_omega_values[:cut_off]
     ideal_values = sorted(actual_omega_values, reverse=True)
     FaiRR_list = []
@@ -58,7 +56,7 @@ def map_score(search_result_relevances: list[int], cut_off=10) -> float:
     Returns:
         The MAP score
     """
-    # TODO: Implement MAP
+    # Implement MAP
     sum_precision = 0
     num_retrieved = 0
 
@@ -97,7 +95,7 @@ def ndcg_score(search_result_relevances: list[float],
     Returns:
         The NDCG score
     """
-    # TODO: Implement NDCG
+    # Implement NDCG
     dcg_list = []
     ideal_dcg_list = []
 
@@ -132,7 +130,6 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
                         mmr_lambda: int = 1,
                         mmr_threshold: int = 100
                         ) -> dict[str, float]:
-    # TODO: Implement running relevance test for the search system for multiple queries.
     """
     Measures the performance of the IR system using metrics, such as MAP and NDCG.
 
@@ -144,13 +141,13 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
     Returns:
         A dictionary containing both MAP and NDCG scores
     """
-    # TODO: Load the relevance dataset
+    # Load the relevance dataset
     relevance_df = pd.read_csv(relevance_data_filename)
     queries = relevance_df['query'].unique()
     MAP_list = []
     NDCG_list = []
 
-    # TODO: Run each of the dataset's queries through your ranking function
+    # Run each of the dataset's queries through ranking function
     for i in tqdm(range(len(queries))):
         query = queries[i]
         ideal = relevance_df[relevance_df['query'] == query]
@@ -167,7 +164,7 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
         else:
             response = ranker.query(query)
 
-    # TODO: For each query's result, calculate the MAP and NDCG for every single query and average them out
+    # For each query's result, calculate the MAP and NDCG for every single query and average them out
 
     # NOTE: MAP requires using binary judgments of relevant (1) or not (0). Use relevance
     #       scores of (1,2,3) as not-relevant, and (4,5) as relevant.
@@ -189,7 +186,7 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
         MAP_list.append(map)
         NDCG_list.append(ndcg)
 
-    # TODO: Compute the average MAP and NDCG across all queries and return the scores
+    # Compute the average MAP and NDCG across all queries and return the scores
     map = np.mean(MAP_list)
     ndcg = np.mean(NDCG_list)
     print("MAP: ", MAP_list)
@@ -198,7 +195,7 @@ def run_relevance_tests(relevance_data_filename: str, ranker,
     return {'map': map, 'ndcg': ndcg, 'map_list': MAP_list, 'ndcg_list': NDCG_list}
 
 
-# TODO (HW5): Implement NFaiRR metric for a list of queries to measure fairness for those queries
+# NFaiRR metric for a list of queries to measure fairness for those queries
 # NOTE: This has no relation to relevance scores and measures fairness of representation of classes
 def run_fairness_test(attributes_file_path: str, protected_class: str, queries: list[str],
                       ranker, cut_off: int = 200) -> float:
@@ -215,19 +212,19 @@ def run_fairness_test(attributes_file_path: str, protected_class: str, queries: 
     Returns:
         The average NFaiRR score across all queries
     """
-    # TODO (HW5): Load person-attributes.csv
+    # Load person-attributes.csv
     attributes_df = pd.read_csv(attributes_file_path)
 
-    # TODO (HW5): Find the documents associated with the protected class
+    # Find the documents associated with the protected class
     rel_docs = attributes_df[attributes_df[protected_class].isnull(
     ) == False]['docid'].values
 
     score = []
 
-    # TODO (HW5): Loop through the queries and
-    #       1. Create the list of omega values for the ranked list.
-    #       2. Compute the NFaiRR score
-    # NOTE: This fairness metric has some 'issues' (and the assignment spec asks you to think about it)
+    # Loop through the queries and
+    #   1. Create the list of omega values for the ranked list.
+    #   2. Compute the NFaiRR score
+    # NOTE: This fairness metric has some 'issues'
     for query in tqdm(queries):
         response = ranker.query(query)
         actual_omega_values = []

@@ -14,6 +14,7 @@ import pickle
 
 CACHE_PATH = '../__cache__/'
 
+
 class L2RRanker:
     def __init__(self, document_index: InvertedIndex, title_index: InvertedIndex,
                  document_preprocessor: Tokenizer, stopwords: set[str], ranker: Ranker,
@@ -120,7 +121,7 @@ class L2RRanker:
 
         return doc_term_count
 
-    def train(self, training_data_filename: str, model_name: str='') -> None:
+    def train(self, training_data_filename: str, model_name: str = '') -> None:
         """
         Trains a LambdaMART pair-wise learning to rank model using the documents and relevance scores provided 
         in the training data file.
@@ -130,13 +131,15 @@ class L2RRanker:
         """
         # TODO: Convert the relevance data into the right format for training data preparation
         if os.path.exists(CACHE_PATH + model_name + 'model.pkl'):
-            self.model = pickle.load(open(CACHE_PATH + model_name + 'model.pkl', 'rb'))
+            self.model = pickle.load(
+                open(CACHE_PATH + model_name + 'model.pkl', 'rb'))
             self.trained = True
             return
         if os.path.exists(CACHE_PATH + model_name + 'X.pkl'):
             X = pickle.load(open(CACHE_PATH + model_name + 'X.pkl', 'rb'))
             y = pickle.load(open(CACHE_PATH + model_name + 'y.pkl', 'rb'))
-            qgroups = pickle.load(open(CACHE_PATH + model_name + 'qgroups.pkl', 'rb'))
+            qgroups = pickle.load(
+                open(CACHE_PATH + model_name + 'qgroups.pkl', 'rb'))
         else:
             query_to_doc_rel_scores = {}
             if training_data_filename.endswith('.csv'):
@@ -176,12 +179,14 @@ class L2RRanker:
         X, y, qgroups = self.prepare_training_data(query_to_doc_rel_scores)
         pickle.dump(X, open(CACHE_PATH + model_name + 'X.pkl', 'wb'))
         pickle.dump(y, open(CACHE_PATH + model_name + 'y.pkl', 'wb'))
-        pickle.dump(qgroups, open(CACHE_PATH + model_name + 'qgroups.pkl', 'wb'))
+        pickle.dump(qgroups, open(
+            CACHE_PATH + model_name + 'qgroups.pkl', 'wb'))
 
         # TODO: Train the model
         print("Training model...")
         self.model.fit(X, y, qgroups)
-        pickle.dump(self.model, open(CACHE_PATH + model_name + 'model.pkl', 'wb'))
+        pickle.dump(self.model, open(
+            CACHE_PATH + model_name + 'model.pkl', 'wb'))
         self.trained = True
 
     def predict(self, X):
@@ -203,7 +208,7 @@ class L2RRanker:
             raise ValueError("Model has not been trained yet.")
         return self.model.predict(X)
 
-    # TODO: Implement MMR diversification for a given list of documents and their cosine similarity scores
+    # Implement MMR diversification for a given list of documents and their cosine similarity scores
     @staticmethod
     def maximize_mmr(thresholded_search_results: list[tuple[int, float]], similarity_matrix: np.ndarray,
                      list_docs: list[int], mmr_lambda: int) -> list[tuple[int, float]]:
@@ -231,7 +236,7 @@ class L2RRanker:
         #       4. Repeat 2 & 3 until there are no more remaining elements in R to be processed
 
         S = []
-        
+
         while len(thresholded_search_results) > 0:
             MR_list = []
             max_id = 0
@@ -239,7 +244,8 @@ class L2RRanker:
             for i in range(len(thresholded_search_results)):
                 MR = mmr_lambda * thresholded_search_results[i][1]
                 if S != []:
-                    max_sim = max(similarity_matrix[list_docs.index(thresholded_search_results[i][0])][list_docs.index(doc[0])] for doc in S) 
+                    max_sim = max(similarity_matrix[list_docs.index(
+                        thresholded_search_results[i][0])][list_docs.index(doc[0])] for doc in S)
                     MR -= (1 - mmr_lambda) * max_sim
                 MR_list.append((thresholded_search_results[i][0], MR))
             max_id = MR_list.index(max(MR_list, key=lambda x: x[1]))
@@ -270,14 +276,14 @@ class L2RRanker:
             A list containing tuples of the ranked documents and their scores, sorted by score in descending order
                 The list has the following structure: [(doc_id_1, score_1), (doc_id_2, score_2), ...]
         """
-        # TODO: Retrieve potentially-relevant documents
+        # Retrieve potentially-relevant documents
         query_parts = self.document_preprocessor.tokenize(query)
         if len(query_parts) == 0:
             return []
 
-        # TODO: Fetch a list of possible documents from the index and create a mapping from
-        #       a document ID to a dictionary of the counts of the query terms in that document.
-        #       You will pass the dictionary to the RelevanceScorer as input
+        # Fetch a list of possible documents from the index and create a mapping from
+        #    a document ID to a dictionary of the counts of the query terms in that document.
+        #    Pass the dictionary to the RelevanceScorer as input
         #
         # NOTE: we collect these here (rather than calling a Ranker instance) because we'll
         #       pass these doc-term-counts to functions later, so we need the accumulated representations
@@ -287,59 +293,59 @@ class L2RRanker:
                 relevant_docs.update(
                     [x[0] for x in self.document_index.index[word]])
 
-        # TODO: Accumulate the documents word frequencies for the title and the main body
+        # Accumulate the documents word frequencies for the title and the main body
         doc_term_counts = self.accumulate_doc_term_counts(
             self.document_index, query_parts)
         title_term_counts = self.accumulate_doc_term_counts(
             self.title_index, query_parts)
 
-        # TODO: Score and sort the documents by the provided scorer for just the document's main text (not the title).
-        #       This ordering determines which documents we will try to *re-rank* using our L2R model
+        # Score and sort the documents by the provided scorer for just the document's main text (not the title).
+        #   This ordering determines which documents we will try to *re-rank* using our L2R model
         results = self.ranker.query(
             query, pseudofeedback_num_docs, pseudofeedback_alpha, pseudofeedback_beta)
 
-        # TODO: Filter to just the top 100 documents for the L2R part for re-ranking
+        # Filter to just the top 100 documents for the L2R part for re-ranking
         results_top_100 = results[:100]
         results_tails = results[100:]
 
-        # TODO: Construct the feature vectors for each query-document pair in the top 100
+        # Construct the feature vectors for each query-document pair in the top 100
         X_pred = []
         for item in results_top_100:
             docid = item[0]
             X_pred.append(self.feature_extractor.generate_features(
                 docid, doc_term_counts[docid], title_term_counts[docid], query_parts, query))
 
-        # TODO: Use your L2R model to rank these top 100 documents
+        # Use L2R model to rank these top 100 documents
         scores = self.predict(X_pred)
 
-        # TODO: Sort posting_lists based on scores
+        # Sort posting_lists based on scores
         for i in range(len(results_top_100)):
             results_top_100[i] = (results_top_100[i][0], scores[i])
         results_top_100.sort(key=lambda x: x[1], reverse=True)
 
-        # TODO: Make sure to add back the other non-top-100 documents that weren't re-ranked
+        # Make sure to add back the other non-top-100 documents that weren't re-ranked
         results = results_top_100 + results_tails
 
-        # TODO (HW5): Run MMR diversification for appropriate values of lambda
+        # Run MMR diversification for appropriate values of lambda
 
-        # TODO (HW5): Get the threholded part of the search results, aka top t results and
-        #      keep the rest separate
+        # Get the threholded part of the search results, aka top t results and
+        #   keep the rest separate
         results_tails = results[mmr_threshold:]
 
-        # TODO (HW5): Get the document similarity matrix for the thresholded documents using vector_ranker
-        #      Preserve the input list of documents to be used in the MMR function
+        # Get the document similarity matrix for the thresholded documents using vector_ranker
+        #   Preserve the input list of documents to be used in the MMR function
         if self.ranker.__class__.__name__ == 'VectorRanker':
             list_docs = [item[0] for item in results[:mmr_threshold]]
             document_similarity = self.ranker.document_similarity(list_docs)
 
-        # TODO (HW5): Run the maximize_mmr function with appropriate arguments
+        # Run the maximize_mmr function with appropriate arguments
             results_thres = self.maximize_mmr(
                 results[:mmr_threshold], document_similarity, list_docs, mmr_lambda)
 
-        # TODO (HW5): Add the remaining search results back to the MMR diversification results
+        # Add the remaining search results back to the MMR diversification results
             results = results_thres + results_tails
 
-        # TODO: Return the ranked documents
+        # Return the ranked documents
         return results
 
     def save_model(self) -> None:
@@ -373,7 +379,7 @@ class L2RFeatureExtractor:
                 and values with the scores for those features
             ce_scorer: The CrossEncoderScorer object
         """
-        # TODO: Set the initial state using the arguments
+        # Set the initial state using the arguments
         self.document_index = document_index
         self.title_index = title_index
         self.doc_category_info = doc_category_info
@@ -382,11 +388,8 @@ class L2RFeatureExtractor:
         self.recognized_categories = recognized_categories
         self.docid_to_network_features = docid_to_network_features
 
-        # TODO: For the recognized categories (i.e,. those that are going to be features), consider
-        #       how you want to store them here for faster featurizing
-
-        # TODO: Initialize any RelevanceScorer objects needed to support the methods below.
-        #             Be sure to use the right InvertedIndex object when scoring
+        # Initialize any RelevanceScorer objects needed to support the methods below.
+        # Be sure to use the right InvertedIndex object when scoring
         self.tf_idf_scorer = TF_IDF(self.document_index)
         self.bm25_scorer = BM25(self.document_index)
         self.pivoted_norm_scorer = PivotedNormalization(self.document_index)
