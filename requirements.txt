@@ -40,7 +40,7 @@ nvidia-nvjitlink-cu12==12.4.99
 nvidia-nvtx-cu12==12.1.105
 packaging==24.0
 pandas==2.2.1
-pillow==10.2.0
+pillow==10.3.0
 preshed==3.0.9
 pydantic==2.6.4
 pydantic_core==2.16.3
